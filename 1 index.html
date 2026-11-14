@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Global Brand Stylist & Style Battle</title>
+    <script src="https://telegram.org"></script>
+    <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #ffffff);
+            --text-color: var(--tg-theme-text-color, #111111);
+            --hint-color: var(--tg-theme-hint-color, #888888);
+            --card-bg: var(--tg-theme-secondary-bg-color, #f4f4f5);
+            --accent-color: var(--tg-theme-button-color, #2481cc);
+            --accent-text: var(--tg-theme-button-text-color, #ffffff);
+            --badge-bg: #e8f5e9;
+            --badge-text: #2e7d32;
+        }
+
+        body.theme-halloween {
+            --bg-color: #16121e; --text-color: #f8f5ff; --hint-color: #a99ec4;
+            --card-bg: #231d30; --accent-color: #ff6b00; --accent-text: #ffffff;
+            --badge-bg: rgba(255, 107, 0, 0.2); --badge-text: #ff9e40;
+        }
+
+        body.theme-winter {
+            --bg-color: #eef6fc; --text-color: #0f2942; --hint-color: #5c7c99;
+            --card-bg: #ffffff; --accent-color: #0288d1; --accent-text: #ffffff;
+            --badge-bg: #e1f5fe; --badge-text: #01579b;
+        }
+
+        body.theme-valentine {
+            --bg-color: #fff0f5; --text-color: #3b0d1e; --hint-color: #8c4a63;
+            --card-bg: #ffffff; --accent-color: #e91e63; --accent-text: #ffffff;
+            --badge-bg: #fce4ec; --badge-text: #ad1457;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 16px;
+            padding-bottom: 100px;
+            transition: background-color 0.3s, color 0.3s;
+            overflow-x: hidden;
+        }
+
+        #holiday-particles {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 999; overflow: hidden;
+        }
+
+        .particle {
+            position: absolute; top: -30px; font-size: 18px; opacity: 0.7;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-30px) rotate(0deg); }
+            100% { transform: translateY(105vh) rotate(360deg); }
+        }
+
+        .top-controls {
+            display: flex; flex-wrap: wrap; justify-content: space-between;
+            gap: 6px; margin-bottom: 16px; position: relative; z-index: 2;
+        }
+
+        .control-group {
+            display: flex; background-color: var(--card-bg); padding: 3px;
+            border-radius: 10px; gap: 2px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        }
+
+        .ctrl-btn {
+            border: none; background: transparent; color: var(--text-color);
+            padding: 5px 7px; font-size: 11px; font-weight: 600;
+            border-radius: 7px; cursor: pointer; transition: 0.2s;
+        }
+
+        .ctrl-btn.active { background-color: var(--accent-color); color: var(--accent-text); }
+
+        .header { margin-bottom: 18px; position: relative; z-index: 2; }
+        .header h1 { font-size: 21px; margin: 0 0 6px 0; }
+        .header p { font-size: 13px; color: var(--hint-color); margin: 0; line-height: 1.4; }
+        
+        .badge {
+            display: inline-block; background: var(--badge-bg); color: var(--badge-text);
+            font-size: 11px; font-weight: 600; padding: 4px 8px; border-radius: 6px; margin-top: 8px;
+        }
+
+        .card-box {
+            background-color: var(--card-bg); border-radius: 16px; padding: 14px;
+            margin-bottom: 16px; display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03); position: relative; z-index: 2;
+        }
+
+        .item-top { display: flex; gap: 12px; align-items: center; }
+        .item-img { width: 80px; height: 100px; border-radius: 10px; object-fit: cover; background-color: #ddd; }
+        .item-info { flex: 1; }
+        .item-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .item-category { font-size: 11px; color: var(--hint-color); text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .item-brand {
+            font-size: 12px; font-weight: 700; background-color: var(--bg-color);
+            color: var(--text-color); padding: 2px 8px; border-radius: 6px;
+            border: 1px solid rgba(128,128,128,0.15);
+        }
+
+        .item-title { font-size: 15px; font-weight: 600; margin: 4px 0; }
+        .item-price { font-size: 17px; font-weight: 700; color: var(--accent-color); }
+
+        .tier-selector {
+            display: flex; background-color: var(--bg-color); border-radius: 10px; padding: 4px; gap: 4px;
+        }
+
+        .tier-btn {
+            flex: 1; border: none; background: transparent; color: var(--text-color);
+            padding: 8px 4px; font-size: 12px; font-weight: 500; border-radius: 8px;
+            cursor: pointer; transition: all 0.2s;
+        }
+
+        .tier-btn.active { background-color: var(--accent-color); color: var(--accent-text); font-weight: 600; }
+
+        .compare-toggle {
+            background: none; border: 1px dashed var(--accent-color); color: var(--accent-color);
+            padding: 8px; border-radius: 10px; font-size: 12px; font-weight: 600;
+            cursor: pointer; width: 100%; text-align: center;
+        }
+
+        .compare-box {
+            display: none; background-color: var(--bg-color); border-radius: 12px;
+            padding: 12px; font-size: 12px; border: 1px solid rgba(128,128,128,0.15);
+        }
+
+        .compare-box.open { display: block; }
+        .compare-row { padding: 8px 0; border-bottom: 1px solid rgba(128,128,128,0.1); }
+        .compare-row:last-child { border-bottom: none; }
+        .compare-row strong { display: block; font-size: 13px; margin-bottom: 2px; }
+
+        .ai-verdict {
+            margin-top: 10px; padding: 10px; background-color: rgba(255, 193, 7, 0.15);
+            color: var(--text-color); border-left: 3px solid #ffc107; border-radius: 6px;
+            font-size: 12px; line-height: 1.4;
+        }
+
+        .summary {
+            background-color: var(--card-bg); padding: 16px; border-radius: 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 10px; position: relative; z-index: 2;
+        }
+
+        .summary-label { font-size: 15px; color: var(--hint-color); }
+        .summary-total { font-size: 20px; font-weight: 800; }
+
+        /* Секція профілю та рейтингу */
+        .tab-section { display: none; }
+        .tab-section.active { display: block; }
+
+        .avatar-section {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+
+        .avatar-preview {
+            width: 86px; height: 86px; border-radius: 50%; object-fit: cover;
+            border: 3px solid var(--accent-color); background-color: var(--bg-color);
+            display: flex; align-items: center; justify-content: center; font-size: 40px;
+        }
+
+        .preset-avatars {
+            display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+        }
+
+        .preset-btn {
+            width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(128,128,128,0.2);
+            background: var(--bg-color); font-size: 20px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .upload-label {
+            font-size: 12px; color: var(--accent-color); font-weight: 600;
+            cursor: pointer; text-decoration: underline;
+        }
+
+        .form-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group.full { grid-column: span 2; }
+        .form-group label { font-size: 12px; color: var(--hint-color); font-weight: 600; }
+        
+        .form-input {
+            background-color: var(--bg-color); color: var(--text-color);
+            border: 1px solid rgba(128,128,128,0.2); border-radius: 10px;
+            padding: 10px; font-size: 14px; outline: none;
+        }
+
+        .primary-btn {
+            background-color: var(--accent-color); color: var(--accent-text);
+            border: none; border-radius: 12px; padding: 12px; font-size: 14px;
+            font-weight: 700; cursor: pointer; width: 100%; transition: 0.2s;
+        }
+
+        .score-banner {
+            background: linear-gradient(135deg, var(--accent-color), #6a11cb);
+            color: #ffffff; border-radius: 14px; padding: 14px; text-align: center;
+        }
+
+        .score-num { font-size: 32px; font-weight: 900; margin: 4px 0; }
+        .score-comment { font-size: 12px; opacity: 0.95; line-height: 1.4; }
+
+        .leaderboard-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px; background-color: var(--bg-color); border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        .leaderboard-row.me {
+            border: 2px solid var(--accent-color);
+        }
+
+        .lb-left { display: flex; align-items: center; gap: 10px; }
+        .lb-rank { font-weight: 800; font-size: 14px; width: 22px; color: var(--accent-color); }
+        .lb-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: var(--card-bg); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .lb-name { font-size: 13px; font-weight: 700; }
+        .lb-style { font-size: 11px; color: var(--hint-color); }
+        .lb-score { font-weight: 800; font-size: 14px; color: var(--accent-color); }
+
+        /* Нижня панель навігації */
+        .bottom-nav {
