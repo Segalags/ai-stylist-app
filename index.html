@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Celebrity Beauty & Dupes</title>
+    <title>AI Stylist • Cashback & P2P Market</title>
     <script src="https://telegram.org"></script>
+    <script src="https://cloudflare.com"></script>
     <style>
         :root {
             --bg: #f5f5f7;
@@ -14,9 +15,31 @@
             --glass: rgba(255, 255, 255, 0.85);
             --seg: rgba(118, 118, 128, 0.1);
             --seg-act: #ffffff;
-            --accent: #ff2d55;
+            --accent: #0071e3;
             --accent-txt: #ffffff;
             --border: rgba(0, 0, 0, 0.05);
+            --green: #34c759;
+            --gold: #ff9f0a;
+        }
+
+        body.theme-halloween {
+            --bg: #0c0c0e; --text: #f5f5f7; --hint: #8e8e93;
+            --card: #1c1c1e; --glass: rgba(28, 28, 30, 0.85);
+            --seg: rgba(118, 118, 128, 0.22); --seg-act: #3a3a3c;
+            --accent: #ff9f0a; --accent-txt: #000000;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        body.theme-winter {
+            --bg: #f0f6fc; --text: #102a43; --hint: #627d98;
+            --card: #ffffff; --glass: rgba(255, 255, 255, 0.88);
+            --accent: #0a84ff;
+        }
+
+        body.theme-valentine {
+            --bg: #fdf4f7; --text: #2d0c18; --hint: #8e556b;
+            --card: #ffffff; --glass: rgba(255, 255, 255, 0.88);
+            --accent: #ff2d55;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -26,8 +49,24 @@
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 62px 16px 96px 16px;
+            padding: 64px 16px 96px 16px;
+            transition: background-color 0.4s ease, color 0.4s ease;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        #holiday-particles {
+            position: fixed; inset: 0; pointer-events: none; z-index: 999; overflow: hidden;
+        }
+
+        .particle {
+            position: absolute; top: -30px; font-size: 15px; opacity: 0.55;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-30px) rotate(0deg); }
+            100% { transform: translateY(105vh) rotate(360deg); }
         }
 
         .topbar {
@@ -41,7 +80,13 @@
             z-index: 100;
         }
 
-        .brand-tag { font-size: 13px; font-weight: 700; letter-spacing: -0.2px; }
+        .pill-group { display: flex; background: var(--seg); padding: 2px; border-radius: 9px; }
+        .pill-btn {
+            border: none; background: transparent; color: var(--text);
+            padding: 4px 8px; font-size: 11px; font-weight: 600;
+            border-radius: 7px; cursor: pointer; transition: 0.2s;
+        }
+        .pill-btn.active { background: var(--seg-act); box-shadow: 0 2px 5px rgba(0,0,0,0.07); }
 
         .coin-badge {
             background: rgba(255, 159, 10, 0.15);
@@ -50,173 +95,132 @@
             font-weight: 800;
             padding: 5px 10px;
             border-radius: 12px;
-        }
-
-        .header { margin: 4px 0 16px 2px; }
-        .header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin: 0; }
-        .header p { font-size: 13px; color: var(--hint); margin: 4px 0 0 0; }
-
-        /* Горизонтальний вибір відомих людей */
-        .celeb-scroll {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-            scrollbar-width: none;
-        }
-        .celeb-scroll::-webkit-scrollbar { display: none; }
-
-        .celeb-chip {
-            flex: 0 0 auto;
-            background: var(--card);
-            border: 1.5px solid transparent;
-            border-radius: 18px;
-            padding: 10px 14px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.03);
-            transition: 0.2s;
+            gap: 4px;
         }
 
-        .celeb-chip.active {
-            border-color: var(--accent);
+        .sound-btn {
+            border: none; background: var(--seg); color: var(--text);
+            width: 28px; height: 26px; border-radius: 8px; font-size: 13px;
+            font-weight: 700; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; transition: 0.25s;
         }
+        .sound-btn.playing { background: var(--accent); color: var(--accent-txt); }
 
-        .celeb-avatar {
-            width: 42px; height: 42px;
-            border-radius: 50%;
-            object-fit: cover;
-            background: var(--seg);
-        }
+        .sec-header { margin: 4px 0 16px 2px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .sec-header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin: 0; }
+        .sec-header p { font-size: 13px; color: var(--hint); margin: 4px 0 0 0; }
 
-        .celeb-name { font-size: 13px; font-weight: 700; }
-        .celeb-effect { font-size: 11px; color: var(--hint); }
-
-        /* Картка косметичного засобу */
         .card {
-            background: var(--card);
-            border-radius: 20px;
-            padding: 14px;
-            margin-bottom: 14px;
-            display: flex; flex-direction: column; gap: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-            border: 0.5px solid var(--border);
+            background: var(--card); border-radius: 20px; padding: 14px;
+            margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 0.5px solid var(--border);
         }
 
         .item-row { display: flex; gap: 14px; align-items: center; }
-        .item-img { width: 70px; height: 84px; border-radius: 12px; object-fit: cover; background: var(--seg); }
+        .item-img { width: 74px; height: 92px; border-radius: 12px; object-fit: cover; background: var(--seg); }
         .item-body { flex: 1; }
-        .item-step { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; }
-        .item-brand { font-size: 15px; font-weight: 700; margin: 2px 0; }
-        .item-desc { font-size: 12px; color: var(--hint); line-height: 1.35; }
-        .item-price { font-size: 16px; font-weight: 700; margin-top: 6px; }
+        .item-brand { font-size: 11px; font-weight: 700; color: var(--hint); text-transform: uppercase; letter-spacing: 0.5px; }
+        .item-name { font-size: 15px; font-weight: 600; margin: 3px 0 5px 0; }
+        .item-footer-line { display: flex; justify-content: space-between; align-items: center; }
+        .item-price { font-size: 16px; font-weight: 700; }
+
+        .quality-link {
+            border: none; background: var(--seg); color: var(--accent);
+            font-size: 11px; font-weight: 600; padding: 5px 10px;
+            border-radius: 12px; cursor: pointer;
+        }
 
         .seg-control { display: flex; background: var(--seg); border-radius: 11px; padding: 3px; }
         .seg-btn {
             flex: 1; border: none; background: transparent; color: var(--text);
-            padding: 7px 4px; font-size: 11px; font-weight: 600;
+            padding: 7px 4px; font-size: 12px; font-weight: 600;
             border-radius: 8px; cursor: pointer; transition: 0.2s;
         }
         .seg-btn.active { background: var(--seg-act); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
 
-        .ai-note {
-            background: var(--bg);
-            padding: 10px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            line-height: 1.4;
-            color: var(--text);
+        .compare-drawer {
+            display: none; background: var(--bg); border-radius: 12px;
+            padding: 12px; font-size: 12px; line-height: 1.45;
         }
+        .compare-drawer.open { display: block; }
+        .cmp-item { margin-bottom: 6px; color: var(--hint); }
+        .cmp-item strong { color: var(--text); }
+        .cmp-verdict { margin-top: 8px; padding-top: 8px; border-top: 0.5px solid var(--border); font-weight: 500; }
 
         .total-bar {
             background: var(--card); padding: 16px 18px; border-radius: 20px;
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 4px 20px rgba(0,0,0,0.03);
         }
-        .total-bar span:first-child { font-size: 13px; color: var(--hint); }
+        .total-bar span:first-child { font-size: 14px; color: var(--hint); }
         .total-bar span:last-child { font-size: 20px; font-weight: 700; }
-    </style>
-</head>
-<body>
 
-    <div class="topbar">
-        <span class="brand-tag">✨ AI Celebrity Beauty</span>
-        <div class="coin-badge" id="coin-bal">💎 0 SC</div>
-    </div>
+        /* 3D-Студія */
+        .studio-box {
+            position: relative; width: 100%; height: 320px;
+            background: #ffffff; border-radius: 22px; overflow: hidden;
+            border: 0.5px solid var(--border); touch-action: none;
+        }
+        #canvas-3d { width: 100%; height: 100%; display: block; }
+        .studio-tag {
+            position: absolute; top: 12px; left: 12px;
+            background: rgba(245,245,247,0.9); color: #1d1d1f;
+            font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 14px;
+        }
+        .studio-scan-btn {
+            position: absolute; top: 12px; right: 12px;
+            background: rgba(245,245,247,0.9); color: #0071e3;
+            font-size: 11px; font-weight: 600; padding: 4px 10px;
+            border-radius: 14px; cursor: pointer;
+        }
 
-    <div class="header">
-        <h1>Косметичка зірок</h1>
-        <p>Оберіть зірку, подивіться її реальний догляд та купіть оригінал або точний аналог</p>
-    </div>
+        .light-row { display: flex; gap: 6px; }
+        .light-chip {
+            flex: 1; border: none; background: var(--seg); color: var(--text);
+            padding: 8px 4px; border-radius: 10px; font-size: 11px; font-weight: 600; cursor: pointer;
+        }
+        .light-chip.active { background: var(--accent); color: var(--accent-txt); }
 
-    <div class="celeb-scroll" id="celeb-list"></div>
+        .slider-wrap { display: flex; flex-direction: column; gap: 8px; }
+        .slider-top { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; }
+        .apple-range {
+            -webkit-appearance: none; width: 100%; height: 5px;
+            border-radius: 4px; background: var(--seg); outline: none;
+        }
+        .apple-range::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+            background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.25); cursor: pointer;
+        }
 
-    <div id="products-list"></div>
+        .dream-card {
+            background: #1d1d1f; color: #ffffff; border-radius: 18px;
+            padding: 14px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .dream-card p { margin: 0; font-size: 12px; line-height: 1.4; opacity: 0.9; }
+        .dream-btn {
+            background: var(--green); color: #ffffff; border: none; border-radius: 12px;
+            padding: 11px; font-size: 13px; font-weight: 600; cursor: pointer;
+        }
 
-    <div class="total-bar">
-        <span>Разом (+100% кешбек у SC)</span>
-        <span id="total-price">0 грн</span>
-    </div>
+        /* КЕЙС */
+        .case-box {
+            background: var(--bg); border-radius: 16px; padding: 14px;
+            display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
+        }
+        .case-spinner {
+            width: 100%; height: 74px; background: var(--card); border-radius: 14px;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            gap: 4px; border: 1px solid var(--border);
+        }
+        .rarity-tag {
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            padding: 2px 8px; border-radius: 8px;
+        }
+        .rarity-trash { background: rgba(142, 142, 147, 0.16); color: #636366; }
+        .rarity-rare { background: rgba(0, 113, 227, 0.15); color: #0071e3; }
+        .rarity-legendary { background: rgba(255, 159, 10, 0.2); color: #d97706; }
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // Підтягуємо єдиний баланс SC з додатку одягу
-        const savedProfile = JSON.parse(localStorage.getItem('min_stylist_v5')) || { styleCoins: 0 };
-        document.getElementById('coin-bal').innerText = `💎 ${savedProfile.styleCoins.toLocaleString()} SC`;
-
-        const celebrities = [
-            {
-                id: 'hailey',
-                name: 'Хейлі Бібер',
-                effect: 'Блиск волосся та шкіри',
-                avatar: 'https://unsplash.com',
-                products: [
-                    {
-                        step: 'Етап 1 • Дзеркальний блиск волосся',
-                        selected: 'dupe',
-                        aiCompare: 'ШІ-аналіз складу: Аналог (L’Oréal Professionnel) містить ті самі амінокислоти та олії для закриття лусочок волосся, але коштує в 2.5 рази дешевше за вибір зірки.',
-                        options: {
-                            star: { brand: 'Gisou Honey Infused Oil', desc: 'Оригінальна медова олія для волосся, яку використовує Хейлі', price: 2150, img: 'https://unsplash.com' },
-                            dupe: { brand: 'L’Oréal Mythic Oil (Аналог)', desc: '95% збіг складу • Арганова олія для миттєвого блиску без обтяження', price: 850, img: 'https://unsplash.com' },
-                            budget: { brand: 'L’Oréal Elseve Extra', desc: 'Доступна базова олія з 6 квітковими екстрактами', price: 320, img: 'https://unsplash.com' }
-                        }
-                    },
-                    {
-                        step: 'Етап 2 • Ефект сяючої шкіри (Glazed Skin)',
-                        selected: 'star',
-                        aiCompare: 'ШІ-аналіз складу: Оригінал (Rhode) містить пептиди та ніацинамід у високій концентрації для миттєвого зволоження перед камерою.',
-                        options: {
-                            star: { brand: 'Rhode Peptide Glazing Fluid', desc: 'Фірмова пептидна сироватка Хейлі для ефекту глазурованої шкіри', price: 1850, img: 'https://unsplash.com' },
-                            dupe: { brand: 'The Ordinary Niacinamide (Аналог)', desc: '92% збіг активів • Ніацинамід 10% + Цинк для рівного тону', price: 490, img: 'https://unsplash.com' },
-                            budget: { brand: 'Garnier Hyaluronic Aloe', desc: 'Базова гіалуронова сироватка на кожен день', price: 260, img: 'https://unsplash.com' }
-                        }
-                    }
-                ]
-            },
-            {
-                id: 'beckham',
-                name: 'Девід Бекхем',
-                effect: 'Текстурна укладка та свіжість',
-                avatar: 'https://unsplash.com',
-                products: [
-                    {
-                        step: 'Етап 1 • Природна укладка волосся',
-                        selected: 'dupe',
-                        aiCompare: 'ШІ-аналіз складу: Аналог (American Crew) дає таку саму матову фіксацію без жирного блиску, як люксовий засіб.',
-                        options: {
-                            star: { brand: 'Oribe Rough Luxury Paste', desc: 'Люксова моделююча паста для об’єму та текстури волосся', price: 2400, img: 'https://unsplash.com' },
-                            dupe: { brand: 'American Crew Fiber (Аналог)', desc: '94% збіг ефекту • Сильна матова фіксація без склеювання', price: 680, img: 'https://unsplash.com' },
-                            budget: { brand: 'Schwarzkopf Taft Matte', desc: 'Бюджетна текстуруюча паста на кожен день', price: 190, img: 'https://unsplash.com' }
-                        }
-                    }
-                ]
-            }
-        ];
-
-        let activeCelebIndex = 0;
-
+        .case-btn {
+            background: #1d1d1f; color: #ffffff; border: none; border-radius: 12px;
