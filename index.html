@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Celebrity Beauty & Dupes</title>
+    <script src="https://telegram.org"></script>
+    <style>
+        :root {
+            --bg: #f5f5f7;
+            --text: #1d1d1f;
+            --hint: #86868b;
+            --card: #ffffff;
+            --glass: rgba(255, 255, 255, 0.85);
+            --seg: rgba(118, 118, 128, 0.1);
+            --seg-act: #ffffff;
+            --accent: #ff2d55;
+            --accent-txt: #ffffff;
+            --border: rgba(0, 0, 0, 0.05);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 62px 16px 96px 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: var(--glass);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 0.5px solid var(--border);
+            padding: 10px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+
+        .brand-tag { font-size: 13px; font-weight: 700; letter-spacing: -0.2px; }
+
+        .coin-badge {
+            background: rgba(255, 159, 10, 0.15);
+            color: #d97706;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 5px 10px;
+            border-radius: 12px;
+        }
+
+        .header { margin: 4px 0 16px 2px; }
+        .header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin: 0; }
+        .header p { font-size: 13px; color: var(--hint); margin: 4px 0 0 0; }
+
+        /* Горизонтальний вибір відомих людей */
+        .celeb-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            scrollbar-width: none;
+        }
+        .celeb-scroll::-webkit-scrollbar { display: none; }
+
+        .celeb-chip {
+            flex: 0 0 auto;
+            background: var(--card);
+            border: 1.5px solid transparent;
+            border-radius: 18px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+            transition: 0.2s;
+        }
+
+        .celeb-chip.active {
+            border-color: var(--accent);
+        }
+
+        .celeb-avatar {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--seg);
+        }
+
+        .celeb-name { font-size: 13px; font-weight: 700; }
+        .celeb-effect { font-size: 11px; color: var(--hint); }
+
+        /* Картка косметичного засобу */
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 14px;
+            margin-bottom: 14px;
+            display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            border: 0.5px solid var(--border);
+        }
+
+        .item-row { display: flex; gap: 14px; align-items: center; }
+        .item-img { width: 70px; height: 84px; border-radius: 12px; object-fit: cover; background: var(--seg); }
+        .item-body { flex: 1; }
+        .item-step { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; }
+        .item-brand { font-size: 15px; font-weight: 700; margin: 2px 0; }
+        .item-desc { font-size: 12px; color: var(--hint); line-height: 1.35; }
+        .item-price { font-size: 16px; font-weight: 700; margin-top: 6px; }
+
+        .seg-control { display: flex; background: var(--seg); border-radius: 11px; padding: 3px; }
+        .seg-btn {
+            flex: 1; border: none; background: transparent; color: var(--text);
+            padding: 7px 4px; font-size: 11px; font-weight: 600;
+            border-radius: 8px; cursor: pointer; transition: 0.2s;
+        }
+        .seg-btn.active { background: var(--seg-act); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+
+        .ai-note {
+            background: var(--bg);
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            line-height: 1.4;
+            color: var(--text);
+        }
+
+        .total-bar {
+            background: var(--card); padding: 16px 18px; border-radius: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+        .total-bar span:first-child { font-size: 13px; color: var(--hint); }
+        .total-bar span:last-child { font-size: 20px; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <span class="brand-tag">✨ AI Celebrity Beauty</span>
+        <div class="coin-badge" id="coin-bal">💎 0 SC</div>
+    </div>
+
+    <div class="header">
+        <h1>Косметичка зірок</h1>
+        <p>Оберіть зірку, подивіться її реальний догляд та купіть оригінал або точний аналог</p>
+    </div>
+
+    <div class="celeb-scroll" id="celeb-list"></div>
+
+    <div id="products-list"></div>
+
+    <div class="total-bar">
+        <span>Разом (+100% кешбек у SC)</span>
+        <span id="total-price">0 грн</span>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Підтягуємо єдиний баланс SC з додатку одягу
+        const savedProfile = JSON.parse(localStorage.getItem('min_stylist_v5')) || { styleCoins: 0 };
+        document.getElementById('coin-bal').innerText = `💎 ${savedProfile.styleCoins.toLocaleString()} SC`;
+
+        const celebrities = [
+            {
+                id: 'hailey',
+                name: 'Хейлі Бібер',
+                effect: 'Блиск волосся та шкіри',
+                avatar: 'https://unsplash.com',
+                products: [
+                    {
+                        step: 'Етап 1 • Дзеркальний блиск волосся',
+                        selected: 'dupe',
+                        aiCompare: 'ШІ-аналіз складу: Аналог (L’Oréal Professionnel) містить ті самі амінокислоти та олії для закриття лусочок волосся, але коштує в 2.5 рази дешевше за вибір зірки.',
+                        options: {
+                            star: { brand: 'Gisou Honey Infused Oil', desc: 'Оригінальна медова олія для волосся, яку використовує Хейлі', price: 2150, img: 'https://unsplash.com' },
+                            dupe: { brand: 'L’Oréal Mythic Oil (Аналог)', desc: '95% збіг складу • Арганова олія для миттєвого блиску без обтяження', price: 850, img: 'https://unsplash.com' },
+                            budget: { brand: 'L’Oréal Elseve Extra', desc: 'Доступна базова олія з 6 квітковими екстрактами', price: 320, img: 'https://unsplash.com' }
+                        }
+                    },
+                    {
+                        step: 'Етап 2 • Ефект сяючої шкіри (Glazed Skin)',
+                        selected: 'star',
+                        aiCompare: 'ШІ-аналіз складу: Оригінал (Rhode) містить пептиди та ніацинамід у високій концентрації для миттєвого зволоження перед камерою.',
+                        options: {
+                            star: { brand: 'Rhode Peptide Glazing Fluid', desc: 'Фірмова пептидна сироватка Хейлі для ефекту глазурованої шкіри', price: 1850, img: 'https://unsplash.com' },
+                            dupe: { brand: 'The Ordinary Niacinamide (Аналог)', desc: '92% збіг активів • Ніацинамід 10% + Цинк для рівного тону', price: 490, img: 'https://unsplash.com' },
+                            budget: { brand: 'Garnier Hyaluronic Aloe', desc: 'Базова гіалуронова сироватка на кожен день', price: 260, img: 'https://unsplash.com' }
+                        }
+                    }
+                ]
+            },
+            {
+                id: 'beckham',
+                name: 'Девід Бекхем',
+                effect: 'Текстурна укладка та свіжість',
+                avatar: 'https://unsplash.com',
+                products: [
+                    {
+                        step: 'Етап 1 • Природна укладка волосся',
+                        selected: 'dupe',
+                        aiCompare: 'ШІ-аналіз складу: Аналог (American Crew) дає таку саму матову фіксацію без жирного блиску, як люксовий засіб.',
+                        options: {
+                            star: { brand: 'Oribe Rough Luxury Paste', desc: 'Люксова моделююча паста для об’єму та текстури волосся', price: 2400, img: 'https://unsplash.com' },
+                            dupe: { brand: 'American Crew Fiber (Аналог)', desc: '94% збіг ефекту • Сильна матова фіксація без склеювання', price: 680, img: 'https://unsplash.com' },
+                            budget: { brand: 'Schwarzkopf Taft Matte', desc: 'Бюджетна текстуруюча паста на кожен день', price: 190, img: 'https://unsplash.com' }
+                        }
+                    }
+                ]
+            }
+        ];
+
+        let activeCelebIndex = 0;
+
