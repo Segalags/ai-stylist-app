@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Stylist • Cashback & P2P Market</title>
+    <script src="https://telegram.org"></script>
+    <script src="https://cloudflare.com"></script>
+    <style>
+        :root {
+            --bg: #f5f5f7;
+            --text: #1d1d1f;
+            --hint: #86868b;
+            --card: #ffffff;
+            --glass: rgba(255, 255, 255, 0.85);
+            --seg: rgba(118, 118, 128, 0.1);
+            --seg-act: #ffffff;
+            --accent: #0071e3;
+            --accent-txt: #ffffff;
+            --border: rgba(0, 0, 0, 0.05);
+            --green: #34c759;
+            --gold: #ff9f0a;
+        }
+
+        body.theme-halloween {
+            --bg: #0c0c0e; --text: #f5f5f7; --hint: #8e8e93;
+            --card: #1c1c1e; --glass: rgba(28, 28, 30, 0.85);
+            --seg: rgba(118, 118, 128, 0.22); --seg-act: #3a3a3c;
+            --accent: #ff9f0a; --accent-txt: #000000;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        body.theme-winter {
+            --bg: #f0f6fc; --text: #102a43; --hint: #627d98;
+            --card: #ffffff; --glass: rgba(255, 255, 255, 0.88);
+            --accent: #0a84ff;
+        }
+
+        body.theme-valentine {
+            --bg: #fdf4f7; --text: #2d0c18; --hint: #8e556b;
+            --card: #ffffff; --glass: rgba(255, 255, 255, 0.88);
+            --accent: #ff2d55;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 64px 16px 96px 16px;
+            transition: background-color 0.4s ease, color 0.4s ease;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        #holiday-particles {
+            position: fixed; inset: 0; pointer-events: none; z-index: 999; overflow: hidden;
+        }
+
+        .particle {
+            position: absolute; top: -30px; font-size: 15px; opacity: 0.55;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-30px) rotate(0deg); }
+            100% { transform: translateY(105vh) rotate(360deg); }
+        }
+
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0;
+            background: var(--glass);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-bottom: 0.5px solid var(--border);
+            padding: 10px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+
+        .pill-group { display: flex; background: var(--seg); padding: 2px; border-radius: 9px; }
+        .pill-btn {
+            border: none; background: transparent; color: var(--text);
+            padding: 4px 8px; font-size: 11px; font-weight: 600;
+            border-radius: 7px; cursor: pointer; transition: 0.2s;
+        }
+        .pill-btn.active { background: var(--seg-act); box-shadow: 0 2px 5px rgba(0,0,0,0.07); }
+
+        .coin-badge {
+            background: rgba(255, 159, 10, 0.15);
+            color: #d97706;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 5px 10px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .sound-btn {
+            border: none; background: var(--seg); color: var(--text);
+            width: 28px; height: 26px; border-radius: 8px; font-size: 13px;
+            font-weight: 700; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; transition: 0.25s;
+        }
+        .sound-btn.playing { background: var(--accent); color: var(--accent-txt); }
+
+        .sec-header { margin: 4px 0 16px 2px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .sec-header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin: 0; }
+        .sec-header p { font-size: 13px; color: var(--hint); margin: 4px 0 0 0; }
+
+        .card {
+            background: var(--card); border-radius: 20px; padding: 14px;
+            margin-bottom: 14px; display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 0.5px solid var(--border);
+        }
+
+        .item-row { display: flex; gap: 14px; align-items: center; }
+        .item-img { width: 74px; height: 92px; border-radius: 12px; object-fit: cover; background: var(--seg); }
+        .item-body { flex: 1; }
+        .item-brand { font-size: 11px; font-weight: 700; color: var(--hint); text-transform: uppercase; letter-spacing: 0.5px; }
+        .item-name { font-size: 15px; font-weight: 600; margin: 3px 0 5px 0; }
+        .item-footer-line { display: flex; justify-content: space-between; align-items: center; }
+        .item-price { font-size: 16px; font-weight: 700; }
+
+        .quality-link {
+            border: none; background: var(--seg); color: var(--accent);
+            font-size: 11px; font-weight: 600; padding: 5px 10px;
+            border-radius: 12px; cursor: pointer;
+        }
+
+        .seg-control { display: flex; background: var(--seg); border-radius: 11px; padding: 3px; }
+        .seg-btn {
+            flex: 1; border: none; background: transparent; color: var(--text);
+            padding: 7px 4px; font-size: 12px; font-weight: 600;
+            border-radius: 8px; cursor: pointer; transition: 0.2s;
+        }
+        .seg-btn.active { background: var(--seg-act); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+
+        .compare-drawer {
+            display: none; background: var(--bg); border-radius: 12px;
+            padding: 12px; font-size: 12px; line-height: 1.45;
+        }
+        .compare-drawer.open { display: block; }
+        .cmp-item { margin-bottom: 6px; color: var(--hint); }
+        .cmp-item strong { color: var(--text); }
+        .cmp-verdict { margin-top: 8px; padding-top: 8px; border-top: 0.5px solid var(--border); font-weight: 500; }
+
+        .total-bar {
+            background: var(--card); padding: 16px 18px; border-radius: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+        .total-bar span:first-child { font-size: 14px; color: var(--hint); }
+        .total-bar span:last-child { font-size: 20px; font-weight: 700; }
+
+        /* 3D-Студія */
+        .studio-box {
+            position: relative; width: 100%; height: 320px;
+            background: #ffffff; border-radius: 22px; overflow: hidden;
+            border: 0.5px solid var(--border); touch-action: none;
+        }
+        #canvas-3d { width: 100%; height: 100%; display: block; }
+        .studio-tag {
+            position: absolute; top: 12px; left: 12px;
+            background: rgba(245,245,247,0.9); color: #1d1d1f;
+            font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 14px;
+        }
+        .studio-scan-btn {
+            position: absolute; top: 12px; right: 12px;
+            background: rgba(245,245,247,0.9); color: #0071e3;
+            font-size: 11px; font-weight: 600; padding: 4px 10px;
+            border-radius: 14px; cursor: pointer;
+        }
+
+        .light-row { display: flex; gap: 6px; }
+        .light-chip {
+            flex: 1; border: none; background: var(--seg); color: var(--text);
+            padding: 8px 4px; border-radius: 10px; font-size: 11px; font-weight: 600; cursor: pointer;
+        }
+        .light-chip.active { background: var(--accent); color: var(--accent-txt); }
+
+        .slider-wrap { display: flex; flex-direction: column; gap: 8px; }
+        .slider-top { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; }
+        .apple-range {
+            -webkit-appearance: none; width: 100%; height: 5px;
+            border-radius: 4px; background: var(--seg); outline: none;
+        }
+        .apple-range::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+            background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.25); cursor: pointer;
+        }
+
+        .dream-card {
+            background: #1d1d1f; color: #ffffff; border-radius: 18px;
+            padding: 14px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .dream-card p { margin: 0; font-size: 12px; line-height: 1.4; opacity: 0.9; }
+        .dream-btn {
+            background: var(--green); color: #ffffff; border: none; border-radius: 12px;
+            padding: 11px; font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+
+        /* КЕЙС */
+        .case-box {
+            background: var(--bg); border-radius: 16px; padding: 14px;
+            display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px;
+        }
+        .case-spinner {
+            width: 100%; height: 74px; background: var(--card); border-radius: 14px;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            gap: 4px; border: 1px solid var(--border);
+        }
+        .rarity-tag {
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            padding: 2px 8px; border-radius: 8px;
+        }
+        .rarity-trash { background: rgba(142, 142, 147, 0.16); color: #636366; }
+        .rarity-rare { background: rgba(0, 113, 227, 0.15); color: #0071e3; }
+        .rarity-legendary { background: rgba(255, 159, 10, 0.2); color: #d97706; }
+
+        .case-btn {
+            background: #1d1d1f; color: #ffffff; border: none; border-radius: 12px;
